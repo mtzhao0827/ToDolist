@@ -49,6 +49,7 @@ public class ToDoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(toDoRepository.save(newtodo));
     }
 
+    // 删除ToDo
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteToDo(@PathVariable Long id) {
         toDoRepository.deleteById(id);
