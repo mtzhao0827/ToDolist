@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Todo List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .todo-item {
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Todo List</h1>
+    <div>
+        <input type="text" id="new-todo-content" placeholder="Enter new todo" />
+        <button onclick="createToDo()">Add ToDo</button>
+    </div>
+    <div>
+        <input type="number" id="delete-todo-id" placeholder="Enter the id of the todo you want to delete" />
+        <button onclick="deleteToDo()">Delete ToDo</button>
+    </div>
+    <div>
+        <input type="number" id="update-todo-id" placeholder="Enter the id of the todo you want to update" />
+        <input type="text" id="update-todo-content" placeholder="Enter the new content of the todo" />
+        <button onclick="updateToDo()">Update ToDo</button>
+    </div>
+    <div id="todo-list"></div>
+
+    <script>
+        // 获取 TODO 列表并显示在页面上
+        document.addEventListener('DOMContentLoaded', ()=>{
+            fetch('/todos')
+                .then(response => response.json())
+                .then(todos => {
+                    const todoList = document.getElementById('todo-list');
+                    todoList.innerHTML = ''; // 清空现有内容
+
+                    for (let i = 0; i < todos.length; i++) {
+                        const todo = todos[i];
+                        const todoItem = document.createElement('div');
+                        todoItem.className = 'todo-item';
+                        todoItem.innerText = `ID: ${todo.id} - ${todo.content} - Completed: ${todo.completed}`;
+
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        //checkbox.disabled = true;
+                        checkbox.checked = todo.completed;
+                        checkbox.addEventListener('change', function () {
+                            updateCheck(todo.id,todo.content,checkbox.checked);
+                        });
+                        todoItem.appendChild(checkbox);
+                        todoList.appendChild(todoItem);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching todos:', error);
+                });
+        });
+
+        function  fetchTodos(){
+            fetch('/todos')
+                .then(response => response.json())
+                .then(todos => {
+                    const todoList = document.getElementById('todo-list');
+                    todoList.innerHTML = ''; // 清空现有内容
+
+                    for (let i = 0; i < todos.length; i++) {
+                        const todo = todos[i];
+                        const todoItem = document.createElement('div');
+                        todoItem.className = 'todo-item';
+                        todoItem.innerText = `ID: ${todo.id} - ${todo.content} - Completed: ${todo.completed}`;
+
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        //checkbox.disabled = true;
+                        checkbox.checked = todo.completed;
+                        checkbox.addEventListener('change', function () {
+                            updateCheck(todo.id,todo.content,checkbox.checked);
+                        });
+                        todoItem.appendChild(checkbox);
+                        todoList.appendChild(todoItem);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching todos:', error);
+                });
+        }
+
+        // 在页面加载时获取 TODO 列表
+        window.onload = () => {
+    //        fetchTodos();
+        };
+
+
+        // 添加新的 TODO
+        function createToDo() {
+            const content = document.getElementById('new-todo-content').value;
+            if (content.trim() === '') {
+                alert('ToDo content cannot be empty');
+                return;
+            }
+            const newToDo = {
+                content: content,
+                completed: false
+            };
+
+            fetch('/todos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newToDo)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        document.getElementById('new-todo-content').value = '';
+                        fetchTodos();
+                    } else {
+                        throw new Error('Failed to create todo');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error adding todo:', error);
+                });
+        }
+        // 删除ToDo
+        function deleteToDo() {
+            const id = document.getElementById('delete-todo-id').value;
+            if (id.trim() === '') {
+                alert('ToDo id cannot be empty');
+                return;
+            }
+            fetch(`/todos/${id}`, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    if (response.ok){
+                        document.getElementById('delete-todo-id').value = '';
+                        fetchTodos();
+                    } else {
+                        throw new Error('Failed to delete todo');
+                    }
+                })
+                .catch(error => {
+                    alert('Error deleting todo:', error)
+                });
+        }
+        //更新check
+        function updateCheck(id,content,completed){
+            const updatedToDo = {
+                content: content,
+                completed: completed
+            };
+            fetch(`/todos/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedToDo)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        fetchTodos();
+                    } else {
+                        throw new Error('Failed to update todo');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating todo:', error);
+                });
+        }
+        // 更新ToDo
+        function updateToDo() {
+            const id = document.getElementById('update-todo-id').value;
+            const content = document.getElementById('update-todo-content').value;
+            if (id.trim() === '') {
+                alert('ToDo id cannot be empty.');
+                return;
+            }
+            if (content.trim() === '') {
+                alert('ToDo content cannot be empty.');
+                return;
+            }
+            const updatedToDo = {
+                content: content,
+                completed: false
+            };
+            fetch(`/todos/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedToDo)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        document.getElementById('update-todo-id').value = '';
+                        document.getElementById('update-todo-content').value = '';
+                        fetchTodos();
+                    } else {
+                        throw new Error('Failed to update todo');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating todo:', error);
+                });
+        }
+
+    </script>
+</body>
+
+</html>
