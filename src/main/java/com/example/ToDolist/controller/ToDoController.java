@@ -54,7 +54,7 @@ public class ToDoController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteToDo(@PathVariable Long id) {
         toDoRepository.deleteById(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
     }
 
     // 修改todo
@@ -69,8 +69,7 @@ public class ToDoController {
             if (updatedToDo.isCompleted() != null) {
                 todo.setCompleted(updatedToDo.isCompleted());
             }
-            ToDolist savedtodo = toDoRepository.save(todo);
-            return ResponseEntity.ok(savedtodo);
+            return ResponseEntity.status(HttpStatus.OK).body(toDoRepository.save(todo));
         }
         else{
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
