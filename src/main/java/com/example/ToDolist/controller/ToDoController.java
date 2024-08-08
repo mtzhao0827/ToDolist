@@ -1,5 +1,6 @@
 package com.example.ToDolist.controller;
 
+import com.example.ToDolist.exception.todo.TodoNotFoundException;
 import com.example.ToDolist.model.ToDolist;
 import com.example.ToDolist.repository.ToDoRepository;
 import jakarta.annotation.PostConstruct;
@@ -72,7 +73,7 @@ public class ToDoController {
             return ResponseEntity.status(HttpStatus.OK).body(toDoRepository.save(todo));
         }
         else{
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            throw new TodoNotFoundException(id);
         }
     }
 }
