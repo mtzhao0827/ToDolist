@@ -3,17 +3,17 @@ package com.example.ToDolist.controller;
 import com.example.ToDolist.exception.todo.TodoNotFoundException;
 import com.example.ToDolist.model.ToDolist;
 import com.example.ToDolist.repository.ToDoRepository;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
 @RequestMapping("/todos")
@@ -41,8 +41,13 @@ public class ToDoController {
 //    }
 
     @GetMapping("")
-    public ResponseEntity<List<ToDolist>> getTodos() {
-        return ResponseEntity.status(HttpStatus.OK).body(toDoRepository.findAll());
+    public ResponseEntity<Page<ToDolist>> getTodos(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "3") int size
+        ){
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ToDolist> todos = toDoRepository.findAll(pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(todos);
     }
 
     // 创建ToDo
