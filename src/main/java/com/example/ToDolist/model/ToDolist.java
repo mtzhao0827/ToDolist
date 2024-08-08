@@ -8,7 +8,7 @@ import jakarta.persistence.Id;
 @Entity // 标注该类为实体类，并且将其映射到数据库表
 public class ToDolist {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY) //指定主键的生成方式，GenerationType.IDENTITY为自增
     private Long id;
     private String content;
     private Boolean completed;

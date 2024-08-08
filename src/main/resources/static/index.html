@@ -36,10 +36,12 @@
 
     <script>
         // 获取 TODO 列表并显示在页面上
-        document.addEventListener('DOMContentLoaded', ()=>{
-            fetch('/todos')
+        document.addEventListener('DOMContentLoaded', ()=> {
+            //初始页码和页面大小
+            fetch(`/todos?page=0&size=3`)
                 .then(response => response.json())
-                .then(todos => {
+                .then(data => {
+                    const todos = data.content //提取分页数据中的内容
                     const todoList = document.getElementById('todo-list');
                     todoList.innerHTML = ''; // 清空现有内容
 
@@ -54,7 +56,7 @@
                         //checkbox.disabled = true;
                         checkbox.checked = todo.completed;
                         checkbox.addEventListener('change', function () {
-                            updateCheck(todo.id,todo.content,checkbox.checked);
+                            updateCheck(todo.id, todo.content, checkbox.checked);
                         });
                         todoItem.appendChild(checkbox);
                         todoList.appendChild(todoItem);
@@ -63,12 +65,13 @@
                 .catch(error => {
                     console.error('Error fetching todos:', error);
                 });
-        });
+        })
 
-        function  fetchTodos(){
-            fetch('/todos')
+        function fetchTodos(page = 0, size = 3) {
+            fetch(`/todos?page=${page}&size=${size}`)
                 .then(response => response.json())
-                .then(todos => {
+                .then(data => {
+                    const todos = data.content //提取分页数据中的内容
                     const todoList = document.getElementById('todo-list');
                     todoList.innerHTML = ''; // 清空现有内容
 
@@ -83,7 +86,7 @@
                         //checkbox.disabled = true;
                         checkbox.checked = todo.completed;
                         checkbox.addEventListener('change', function () {
-                            updateCheck(todo.id,todo.content,checkbox.checked);
+                            updateCheck(todo.id, todo.content, checkbox.checked);
                         });
                         todoItem.appendChild(checkbox);
                         todoList.appendChild(todoItem);
@@ -96,7 +99,7 @@
 
         // 在页面加载时获取 TODO 列表
         window.onload = () => {
-    //        fetchTodos();
+            fetchTodos();
         };
 
 
