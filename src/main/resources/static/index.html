@@ -32,74 +32,74 @@
         <input type="text" id="update-todo-content" placeholder="Enter the new content of the todo" />
         <button onclick="updateToDo()">Update ToDo</button>
     </div>
+    <div id="pagination"></div>
     <div id="todo-list"></div>
 
     <script>
         // 获取 TODO 列表并显示在页面上
         document.addEventListener('DOMContentLoaded', ()=> {
-            //初始页码和页面大小
-            fetch(`/todos?page=0&size=3`)
-                .then(response => response.json())
-                .then(data => {
-                    const todos = data.content //提取分页数据中的内容
-                    const todoList = document.getElementById('todo-list');
-                    todoList.innerHTML = ''; // 清空现有内容
-
-                    for (let i = 0; i < todos.length; i++) {
-                        const todo = todos[i];
-                        const todoItem = document.createElement('div');
-                        todoItem.className = 'todo-item';
-                        todoItem.innerText = `ID: ${todo.id} - ${todo.content} - Completed: ${todo.completed}`;
-
-                        const checkbox = document.createElement('input');
-                        checkbox.type = 'checkbox';
-                        //checkbox.disabled = true;
-                        checkbox.checked = todo.completed;
-                        checkbox.addEventListener('change', function () {
-                            updateCheck(todo.id, todo.content, checkbox.checked);
-                        });
-                        todoItem.appendChild(checkbox);
-                        todoList.appendChild(todoItem);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching todos:', error);
-                });
+            fetchTodos(0,3);
         })
 
-        function fetchTodos(page = 0, size = 3) {
+        function fetchTodos(page, size) {
             fetch(`/todos?page=${page}&size=${size}`)
                 .then(response => response.json())
                 .then(data => {
                     const todos = data.content //提取分页数据中的内容
-                    const todoList = document.getElementById('todo-list');
-                    todoList.innerHTML = ''; // 清空现有内容
-
-                    for (let i = 0; i < todos.length; i++) {
-                        const todo = todos[i];
-                        const todoItem = document.createElement('div');
-                        todoItem.className = 'todo-item';
-                        todoItem.innerText = `ID: ${todo.id} - ${todo.content} - Completed: ${todo.completed}`;
-
-                        const checkbox = document.createElement('input');
-                        checkbox.type = 'checkbox';
-                        //checkbox.disabled = true;
-                        checkbox.checked = todo.completed;
-                        checkbox.addEventListener('change', function () {
-                            updateCheck(todo.id, todo.content, checkbox.checked);
-                        });
-                        todoItem.appendChild(checkbox);
-                        todoList.appendChild(todoItem);
-                    }
+                    const totalPages = data.totalPages;
+                    const currentPage = data.number + 1;
+                    displayTodos(todos); //显示当前页的todos
+                    displayPagination(totalPages, currentPage); //显示分页
                 })
                 .catch(error => {
                     console.error('Error fetching todos:', error);
                 });
         }
 
+        function displayTodos(todos){
+            const todoList = document.getElementById('todo-list');
+            todoList.innerHTML = ''; // 清空现有内容
+
+            for (let i = 0; i < todos.length; i++) {
+                const todo = todos[i];
+                const todoItem = document.createElement('div');
+                todoItem.className = 'todo-item';
+                todoItem.innerText = `ID: ${todo.id} - ${todo.content} - Completed: ${todo.completed}`;
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                //checkbox.disabled = true;
+                checkbox.checked = todo.completed;
+                checkbox.addEventListener('change', function () {
+                    updateCheck(todo.id, todo.content, checkbox.checked);
+                });
+                todoItem.appendChild(checkbox);
+                todoList.appendChild(todoItem);
+            }
+        }
+
+        function displayPagination(totalPages, currentPage){
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            for (let page = 0; page < totalPages; page++){
+                const pageLink = document.createElement('a');
+                pageLink.href = '#';
+                pageLink.innerText = page + 1;
+                if (page === currentPage -1) { //当前页高亮
+                    pageLink.classList.add('active');
+                }
+                pageLink.addEventListener('click', function (event){
+                    event.preventDefault(); //阻止默认行为
+                    fetchTodos(page,3); //跳转到指定页
+                });
+                pagination.appendChild(pageLink);
+            }
+        }
+
         // 在页面加载时获取 TODO 列表
         window.onload = () => {
-            fetchTodos();
+            fetchTodos(0,3);
         };
 
 
@@ -125,7 +125,7 @@
                 .then(response => {
                     if (response.ok) {
                         document.getElementById('new-todo-content').value = '';
-                        fetchTodos();
+                        fetchTodos(0,3);
                     } else {
                         throw new Error('Failed to create todo');
                     }
@@ -147,7 +147,7 @@
                 .then(response => {
                     if (response.ok){
                         document.getElementById('delete-todo-id').value = '';
-                        fetchTodos();
+                        fetchTodos(0,3);
                     } else {
                         throw new Error('Failed to delete todo');
                     }
@@ -171,7 +171,7 @@
             })
                 .then(response => {
                     if (response.ok) {
-                        fetchTodos();
+                        fetchTodos(0,3);
                     } else {
                         throw new Error('Failed to update todo');
                     }
@@ -207,7 +207,7 @@
                     if (response.ok) {
                         document.getElementById('update-todo-id').value = '';
                         document.getElementById('update-todo-content').value = '';
-                        fetchTodos();
+                        fetchTodos(0,3);
                     } else {
                         throw new Error('Failed to update todo');
                     }
