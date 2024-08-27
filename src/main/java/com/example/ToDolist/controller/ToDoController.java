@@ -62,10 +62,8 @@ public class ToDoController {
     // 创建ToDo
     @PostMapping("")
     public ResponseEntity<ToDo> createToDo(@PathVariable Long userId, @RequestBody ToDo newtodo) {
-        Optional<User> userOptional = userRepository.findById(userId);
-        if (!userOptional.isPresent()){
-            throw new UserNotFoundException(userId);
-        }
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+        newtodo.setUser(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(toDoRepository.save(newtodo));
     }
 
