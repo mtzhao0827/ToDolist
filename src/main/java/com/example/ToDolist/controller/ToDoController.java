@@ -1,8 +1,11 @@
 package com.example.ToDolist.controller;
 
 import com.example.ToDolist.exception.todo.TodoNotFoundException;
-import com.example.ToDolist.model.ToDolist;
+import com.example.ToDolist.exception.user.UserNotFoundException;
+import com.example.ToDolist.model.ToDo;
+import com.example.ToDolist.model.User;
 import com.example.ToDolist.repository.ToDoRepository;
+import com.example.ToDolist.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,14 +19,15 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/todos")
-@Controller
-@ResponseBody
+@RequestMapping("/users/{userId}/todos")
 public class ToDoController {
 
     @Autowired
     private ToDoRepository toDoRepository;
-    private List<ToDolist> todos;
+
+    @Autowired
+    private UserRepository userRepository;
+
     //private AtomicLong counter;
 //    public ToDoController() {
 //        todos = new ArrayList<>();
@@ -40,19 +44,28 @@ public class ToDoController {
 //        }
 //    }
 
+    // 分页
     @GetMapping("")
-    public ResponseEntity<Page<ToDolist>> getTodos(
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "3") int size
+    public ResponseEntity<Page<ToDo>> getTodos(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "3") int size
         ){
+        Optional<User> userOptional = userRepository.findById(userId);
+        User user = userOptional.orElseThrow(()->new UserNotFoundException(userId));
+
         Pageable pageable = PageRequest.of(page, size);
-        Page<ToDolist> todos = toDoRepository.findAll(pageable);
+        Page<ToDo> todos = toDoRepository.findByUser(user,pageable);
         return ResponseEntity.status(HttpStatus.OK).body(todos);
     }
 
     // 创建ToDo
     @PostMapping("")
-    public ResponseEntity<ToDolist> createToDo(@RequestBody ToDolist newtodo) {
+    public ResponseEntity<ToDo> createToDo(@PathVariable Long userId, @RequestBody ToDo newtodo) {
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (!userOptional.isPresent()){
+            throw new UserNotFoundException(userId);
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(toDoRepository.save(newtodo));
     }
 
@@ -65,10 +78,10 @@ public class ToDoController {
 
     // 修改todo
     @PatchMapping("/{id}")
-    public ResponseEntity<ToDolist> updateToDo(@PathVariable Long id, @RequestBody ToDolist updatedToDo) {
-        Optional<ToDolist> optionaltodo = toDoRepository.findById(id);
+    public ResponseEntity<ToDo> updateToDo(@PathVariable Long id, @RequestBody ToDo updatedToDo) {
+        Optional<ToDo> optionaltodo = toDoRepository.findById(id);
         if (optionaltodo.isPresent()){
-            ToDolist todo = optionaltodo.get();
+            ToDo todo = optionaltodo.get();
             if (updatedToDo.getContent() != null) {
                 todo.setContent(updatedToDo.getContent());
             }

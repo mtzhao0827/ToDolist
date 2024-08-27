@@ -1,23 +1,25 @@
 package com.example.ToDolist.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity // 标注该类为实体类，并且将其映射到数据库表
-public class ToDolist {
+public class ToDo {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) //指定主键的生成方式，GenerationType.IDENTITY为自增
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // 指定主键的生成方式，GenerationType.IDENTITY为自增
     private Long id;
     private String content;
     private Boolean completed;
 
-    public ToDolist() {}
+    @ManyToOne
+    @JoinColumn(name = "userId", referencedColumnName = "id")
+    private User user;
 
-    public ToDolist(String content, Boolean completed) {
+    public ToDo() {}
+
+    public ToDo(String content, Boolean completed, User user) {
         this.content = content;
         this.completed = completed;
+        this.user = user;
     }
 
     public Long getId() {
@@ -42,5 +44,13 @@ public class ToDolist {
 
     public void setCompleted(Boolean completed) {
         this.completed = completed;
+    }
+
+    public User getUser(){
+        return user;
+    }
+
+    public void setUser(User user){
+        this.user = user;
     }
 }
