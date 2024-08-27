@@ -1,5 +1,6 @@
 package com.example.ToDolist.controller;
 
+import com.example.ToDolist.exception.user.UserUnauthorizedException;
 import com.example.ToDolist.model.User;
 import com.example.ToDolist.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,10 +30,12 @@ public class UserController {
         // 还要验证密码
         User existingUser = userRepository.findByUsername(user.getUsername());
         if (existingUser != null && existingUser.getPassword().equals(user.getPassword())){
-            return new ResponseEntity<>(existingUser, HttpStatus.OK); // 还要修改
+            // return new ResponseEntity<>(existingUser, HttpStatus.OK);
+            return ResponseEntity.status(HttpStatus.OK).body(existingUser);
         }
         else{
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            Long id = user.getId();
+            throw new UserUnauthorizedException(id);
         }
     }
 }

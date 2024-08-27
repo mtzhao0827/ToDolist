@@ -32,17 +32,26 @@
         <input type="text" id="update-todo-content" placeholder="Enter the new content of the todo" />
         <button onclick="updateToDo()">Update ToDo</button>
     </div>
+    <div>
+        <button onclick="logout()">Logout</button>
+    </div>
     <div id="pagination"></div>
     <div id="todo-list"></div>
 
     <script>
+        // 检测localStorage中是否有userId，如果没有，则跳转到login.html
+        let userId = localStorage.getItem('userId');
+        if (!userId) {
+            window.location.href = '/login.html';
+        }
+
         // 获取 TODO 列表并显示在页面上
         document.addEventListener('DOMContentLoaded', ()=> {
             fetchTodos(0,3);
         })
 
         function fetchTodos(page, size) {
-            fetch(`/todos?page=${page}&size=${size}`)
+            fetch(`/users/${userId}/todos?page=${page}&size=${size}`)
                 .then(response => response.json())
                 .then(data => {
                     const todos = data.content //提取分页数据中的内容
@@ -115,7 +124,7 @@
                 completed: false
             };
 
-            fetch('/todos', {
+            fetch(`/users/${userId}/todos`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -141,7 +150,7 @@
                 alert('ToDo id cannot be empty');
                 return;
             }
-            fetch(`/todos/${id}`, {
+            fetch(`/users/${userId}/todos/${id}`, {
                 method: 'DELETE'
             })
                 .then(response => {
@@ -162,7 +171,7 @@
                 content: content,
                 completed: completed
             };
-            fetch(`/todos/${id}`, {
+            fetch(`/users/${userId}/todos/${id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
@@ -196,7 +205,7 @@
                 content: content,
                 completed: false
             };
-            fetch(`/todos/${id}`, {
+            fetch(`/users/${userId}/todos/${id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
@@ -215,6 +224,12 @@
                 .catch(error => {
                     console.error('Error updating todo:', error);
                 });
+        }
+
+        // 退出登录
+        function logout(){
+            window.localStorage.setItem('userId', null);
+            window.location.href = '/login.html';
         }
 
     </script>
