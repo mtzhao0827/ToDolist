@@ -1,5 +1,7 @@
 package com.example.ToDolist.controller;
 
+import com.example.ToDolist.exception.user.UserBadRequestException;
+import com.example.ToDolist.exception.user.UserConflictException;
 import com.example.ToDolist.exception.user.UserUnauthorizedException;
 import com.example.ToDolist.model.User;
 import com.example.ToDolist.repository.UserRepository;
@@ -19,23 +21,33 @@ public class UserController {
 
     // 注册新用户
     @PostMapping("/register")
-    public ResponseEntity<User> registerUser(@RequestBody User newUser){
-        // 还要处理用户名是否存在，密码加密等
+    public ResponseEntity<User> registerUser(@RequestBody User newUser) {
+        // 验证用户名是否存在
+        User existingUser = userRepository.findByUsername(newUser.getUsername());
+        if (existingUser != null){
+            String username = newUser.getUsername();
+            throw new UserConflictException(username);
+        }
+
+        // 密码加密
         return ResponseEntity.status(HttpStatus.CREATED).body(userRepository.save(newUser));
     }
 
     // 用户登录
     @PostMapping("/login")
-    public ResponseEntity<User> loginUser(@RequestBody User user){
-        // 还要验证密码
+    public ResponseEntity<User> loginUser(@RequestBody User user)  {
         User existingUser = userRepository.findByUsername(user.getUsername());
-        if (existingUser != null && existingUser.getPassword().equals(user.getPassword())){
-            // return new ResponseEntity<>(existingUser, HttpStatus.OK);
-            return ResponseEntity.status(HttpStatus.OK).body(existingUser);
+        if (existingUser == null){
+            String username = user.getUsername();
+            throw new UserBadRequestException(username);
         }
-        else{
-            Long id = user.getId();
+
+        // 还要验证密码
+        if (!existingUser.getPassword().equals(user.getPassword())) {
+            Long id = existingUser.getId();
             throw new UserUnauthorizedException(id);
         }
+
+        return ResponseEntity.status(HttpStatus.OK).body(existingUser);
     }
 }
