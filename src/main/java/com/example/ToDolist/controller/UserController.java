@@ -8,6 +8,7 @@ import com.example.ToDolist.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     // 注册新用户
     @PostMapping("/register")
@@ -30,6 +34,7 @@ public class UserController {
         }
 
         // 密码加密
+        newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
         return ResponseEntity.status(HttpStatus.CREATED).body(userRepository.save(newUser));
     }
 
@@ -43,11 +48,14 @@ public class UserController {
         }
 
         // 还要验证密码
-        if (!existingUser.getPassword().equals(user.getPassword())) {
+//        if (!existingUser.getPassword().equals(user.getPassword())) {
+//            Long id = existingUser.getId();
+//            throw new UserUnauthorizedException(id);
+//        }
+        if (!passwordEncoder.matches(user.getPassword(),existingUser.getPassword())) {
             Long id = existingUser.getId();
             throw new UserUnauthorizedException(id);
         }
-
         return ResponseEntity.status(HttpStatus.OK).body(existingUser);
     }
 }
