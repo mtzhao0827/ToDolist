@@ -41,9 +41,9 @@ public class SecurityConfig {
     ) throws Exception {
 
         return http.httpBasic( AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(c ->
                         c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeRequests(c -> c
                         .requestMatchers(HttpMethod.POST,"/users/register").permitAll()
                         .requestMatchers(HttpMethod.POST,"/users/login").permitAll()
