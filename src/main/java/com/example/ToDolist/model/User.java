@@ -1,12 +1,17 @@
 package com.example.ToDolist.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Entity
-public class User {
+public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -19,16 +24,18 @@ public class User {
         return id;
     }
 
-    public void setId(Long id){
+    public User setId(Long id){
         this.id = id;
+        return this;
     }
 
     public String getUsername(){
         return username;
     }
 
-    public void setUsername(String username){
+    public User setUsername(String username){
         this.username = username;
+        return this;
     }
 
     public String getPassword(){
@@ -37,6 +44,17 @@ public class User {
 
     public void setPassword(String password){
         this.password = password;
+    }
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    private List<String> roles = new ArrayList<>();
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return this.roles
+                .stream()
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
     }
 
 
