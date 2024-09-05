@@ -1,6 +1,7 @@
 package com.example.ToDolist.controller;
 
 import com.example.ToDolist.exception.todo.TodoNotFoundException;
+import com.example.ToDolist.exception.user.UserForbiddenException;
 import com.example.ToDolist.exception.user.UserNotFoundException;
 import com.example.ToDolist.model.ToDo;
 import com.example.ToDolist.model.User;
@@ -54,27 +55,42 @@ public class ToDoController {
 
     // 删除ToDo
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteToDo(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteToDo(@PathVariable Long id, @AuthenticationPrincipal User authenticatedUser) {
+        Optional<ToDo> optionaltodo = toDoRepository.findById(id);
+        if (!optionaltodo.isPresent()) {
+            throw new TodoNotFoundException(id);
+        }
+        Long userId = authenticatedUser.getId();
+        ToDo todo = optionaltodo.get();
+        if (!todo.getUser().getId().equals(userId)){
+            throw new UserForbiddenException();
+        }
         toDoRepository.deleteById(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
     }
 
     // 修改todo
     @PatchMapping("/{id}")
-    public ResponseEntity<ToDo> updateToDo(@PathVariable Long id, @RequestBody ToDo updatedToDo) {
+    public ResponseEntity<ToDo> updateToDo(
+            @PathVariable Long id,
+            @RequestBody ToDo updatedToDo,
+            @AuthenticationPrincipal User authenticatedUser
+    ) {
         Optional<ToDo> optionaltodo = toDoRepository.findById(id);
-        if (optionaltodo.isPresent()){
-            ToDo todo = optionaltodo.get();
-            if (updatedToDo.getContent() != null) {
-                todo.setContent(updatedToDo.getContent());
-            }
-            if (updatedToDo.isCompleted() != null) {
-                todo.setCompleted(updatedToDo.isCompleted());
-            }
-            return ResponseEntity.status(HttpStatus.OK).body(toDoRepository.save(todo));
-        }
-        else{
+        if (!optionaltodo.isPresent()) {
             throw new TodoNotFoundException(id);
         }
+        Long userId = authenticatedUser.getId();
+        ToDo todo = optionaltodo.get();
+        if (!todo.getUser().getId().equals(userId)){
+            throw new UserForbiddenException();
+        }
+        if (updatedToDo.getContent() != null) {
+                todo.setContent(updatedToDo.getContent());
+        }
+        if (updatedToDo.isCompleted() != null) {
+                todo.setCompleted(updatedToDo.isCompleted());
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(toDoRepository.save(todo));
     }
 }
