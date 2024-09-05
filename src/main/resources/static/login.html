@@ -59,7 +59,7 @@
             fetch('/users/login',{
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({username: username, password: password})
             })
@@ -70,8 +70,8 @@
                     return response.json();
                 })
                 .then(data => {
-                    // 登录成功，存储用户ID
-                    window.localStorage.setItem('userId', data.id);
+                    // 登录成功，存储用户token
+                    window.localStorage.setItem('token', data.token);
                     window.location.href = '/index.html';
                 })
                 .catch(error => {

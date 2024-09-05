@@ -8,6 +8,8 @@ import com.example.ToDolist.exception.user.UserUnauthorizedException;
 import com.example.ToDolist.model.User;
 import com.example.ToDolist.repository.UserRepository;
 import com.example.ToDolist.security.JwtTokenProvider;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,15 +26,12 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
 import java.util.Map;
 
+@AllArgsConstructor
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    @Autowired
     private UserRepository userRepository;
-
-    @Autowired
     private PasswordEncoder passwordEncoder;
-
     private AuthenticationManager authenticationManager;
     private JwtTokenProvider jwtTokenProvider;
 

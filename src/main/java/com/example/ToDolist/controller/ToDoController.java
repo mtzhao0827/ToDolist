@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,7 +50,8 @@ public class ToDoController {
     public ResponseEntity<Page<ToDo>> getTodos(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "3") int size
+            @RequestParam(defaultValue = "3") int size,
+            @AuthenticationPrincipal User authenticatedUser
         ){
         Optional<User> userOptional = userRepository.findById(userId);
         User user = userOptional.orElseThrow(()->new UserNotFoundException(userId));
