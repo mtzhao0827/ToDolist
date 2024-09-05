@@ -1,27 +1,39 @@
 package com.example.ToDolist.controller;
 
+import com.example.ToDolist.controller.request.AuthRequest;
+import com.example.ToDolist.exception.basic.unauthorized.UnauthorizedException;
 import com.example.ToDolist.exception.user.UserBadRequestException;
 import com.example.ToDolist.exception.user.UserConflictException;
 import com.example.ToDolist.exception.user.UserUnauthorizedException;
 import com.example.ToDolist.model.User;
 import com.example.ToDolist.repository.UserRepository;
+import com.example.ToDolist.security.JwtTokenProvider;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
+import java.util.Map;
+
+@AllArgsConstructor
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    @Autowired
     private UserRepository userRepository;
-
-    @Autowired
     private PasswordEncoder passwordEncoder;
+    private AuthenticationManager authenticationManager;
+    private JwtTokenProvider jwtTokenProvider;
 
     // 注册新用户
     @PostMapping("/register")
@@ -40,22 +52,24 @@ public class UserController {
 
     // 用户登录
     @PostMapping("/login")
-    public ResponseEntity<User> loginUser(@RequestBody User user)  {
-        User existingUser = userRepository.findByUsername(user.getUsername());
-        if (existingUser == null){
-            String username = user.getUsername();
-            throw new UserBadRequestException(username);
-        }
+    public ResponseEntity<?> loginUser(@RequestBody AuthRequest authRequest)  {
+        try {
+            String username = authRequest.getUsername();
 
-        // 还要验证密码
-//        if (!existingUser.getPassword().equals(user.getPassword())) {
-//            Long id = existingUser.getId();
-//            throw new UserUnauthorizedException(id);
-//        }
-        if (!passwordEncoder.matches(user.getPassword(),existingUser.getPassword())) {
-            Long id = existingUser.getId();
-            throw new UserUnauthorizedException(id);
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(username, authRequest.getPassword())
+            );
+            // authenticationManager 负责认证用户，如果认证成功，将返回一个 authentication 对象，该对象包含已认证的用户信息
+
+            String token = jwtTokenProvider.createToken(authentication);
+            Map<Object, Object> model = new HashMap<>();
+
+            model.put("username", username);
+            model.put("token", token);
+
+            return ResponseEntity.status(201).body(model);
+        } catch (AuthenticationException e) {
+            throw new UnauthorizedException("用户名或密码错误");
         }
-        return ResponseEntity.status(HttpStatus.OK).body(existingUser);
     }
 }

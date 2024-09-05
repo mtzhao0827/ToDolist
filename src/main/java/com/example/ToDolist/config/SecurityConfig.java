@@ -1,5 +1,6 @@
 package com.example.ToDolist.config;
 
+import com.example.ToDolist.exception.basic.unauthorized.UnauthorizedException;
 import com.example.ToDolist.exception.user.UserNotFoundException;
 import com.example.ToDolist.model.User;
 import com.example.ToDolist.repository.UserRepository;
@@ -10,6 +11,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -23,6 +27,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(
@@ -31,7 +36,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
         prePostEnabled = true
 )
 @AllArgsConstructor
-@Component
+@Configuration
 public class SecurityConfig {
 
     @Bean
@@ -41,10 +46,13 @@ public class SecurityConfig {
     ) throws Exception {
 
         return http.httpBasic( AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(c ->
                         c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeRequests(c -> c
+                        .requestMatchers(HttpMethod.GET,"/index.html").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/login.html").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/").permitAll()
                         .requestMatchers(HttpMethod.POST,"/users/register").permitAll()
                         .requestMatchers(HttpMethod.POST,"/users/login").permitAll()
                         .anyRequest().authenticated()
@@ -77,6 +85,23 @@ public class SecurityConfig {
             }
 
             return user;
+        };
+    }
+
+    @Bean
+    public AuthenticationManager customAuthenticationManager(UserDetailsService userDetailsService,
+                                                             PasswordEncoder encoder) {
+        return authentication -> {
+            String username = authentication.getPrincipal() + "";
+            String password = authentication.getCredentials() + "";
+            UserDetails user = userDetailsService.loadUserByUsername(username);
+            if (!encoder.matches(password, user.getPassword())) {
+                throw new UnauthorizedException("密码错误");
+            }
+            if (!user.isEnabled()) {
+                throw new DisabledException("账户未启用");
+            }
+            return new UsernamePasswordAuthenticationToken(username, null, user.getAuthorities());
         };
     }
     @Bean
