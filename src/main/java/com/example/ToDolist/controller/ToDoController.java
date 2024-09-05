@@ -6,7 +6,7 @@ import com.example.ToDolist.model.ToDo;
 import com.example.ToDolist.model.User;
 import com.example.ToDolist.repository.ToDoRepository;
 import com.example.ToDolist.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,39 +20,21 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/users/{userId}/todos")
+@AllArgsConstructor
+@RequestMapping("/users/todos")
 public class ToDoController {
 
-    @Autowired
     private ToDoRepository toDoRepository;
-
-    @Autowired
     private UserRepository userRepository;
-
-    //private AtomicLong counter;
-//    public ToDoController() {
-//        todos = new ArrayList<>();
-//        todos.add(new ToDolist("Learn Spring Boot", false));
-//        todos.add(new ToDolist("Build a todo list", false));
-//        todos.add(new ToDolist("Write a blog post", true));
-//        todos.add(new ToDolist("Attend Spring Boot meetup", false));
-//    }
-//
-//    @PostConstruct
-//    public void init() {
-//        for (ToDolist todo : todos) {
-//            toDoRepository.save(todo);
-//        }
-//    }
 
     // 分页
     @GetMapping("")
     public ResponseEntity<Page<ToDo>> getTodos(
-            @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "3") int size,
             @AuthenticationPrincipal User authenticatedUser
         ){
+        Long userId = authenticatedUser.getId();
         Optional<User> userOptional = userRepository.findById(userId);
         User user = userOptional.orElseThrow(()->new UserNotFoundException(userId));
 
@@ -63,7 +45,8 @@ public class ToDoController {
 
     // 创建ToDo
     @PostMapping("")
-    public ResponseEntity<ToDo> createToDo(@PathVariable Long userId, @RequestBody ToDo newtodo) {
+    public ResponseEntity<ToDo> createToDo(@RequestBody ToDo newtodo, @AuthenticationPrincipal User authenticatedUser) {
+        Long userId = authenticatedUser.getId();
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
         newtodo.setUser(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(toDoRepository.save(newtodo));

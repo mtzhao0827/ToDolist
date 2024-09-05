@@ -40,8 +40,8 @@
 
     <script>
         // 检测localStorage中是否有userId，如果没有，则跳转到login.html
-        let userId = localStorage.getItem('userId');
-        if (!userId) {
+        let userToken = localStorage.getItem('token');
+        if (!userToken) {
             window.location.href = '/login.html';
         }
 
@@ -51,7 +51,12 @@
         })
 
         function fetchTodos(page, size) {
-            fetch(`/users/${userId}/todos?page=${page}&size=${size}`)
+            fetch(`/users/todos?page=${page}&size=${size}`,{
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + window.localStorage.getItem('token')
+                }
+            })
                 .then(response => response.json())
                 .then(data => {
                     const todos = data.content //提取分页数据中的内容
@@ -124,10 +129,11 @@
                 completed: false
             };
 
-            fetch(`/users/${userId}/todos`, {
+            fetch(`/users/todos`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + window.localStorage.getItem('token')
                 },
                 body: JSON.stringify(newToDo)
             })
@@ -150,8 +156,11 @@
                 alert('ToDo id cannot be empty');
                 return;
             }
-            fetch(`/users/${userId}/todos/${id}`, {
-                method: 'DELETE'
+            fetch(`/users/todos/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + window.localStorage.getItem('token')
+                }
             })
                 .then(response => {
                     if (response.ok){
@@ -171,10 +180,11 @@
                 content: content,
                 completed: completed
             };
-            fetch(`/users/${userId}/todos/${id}`, {
+            fetch(`/users/todos/${id}`, {
                 method: 'PATCH',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + window.localStorage.getItem('token')
                 },
                 body: JSON.stringify(updatedToDo)
             })
@@ -205,10 +215,11 @@
                 content: content,
                 completed: false
             };
-            fetch(`/users/${userId}/todos/${id}`, {
+            fetch(`/users/todos/${id}`, {
                 method: 'PATCH',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + window.localStorage.getItem('token')
                 },
                 body: JSON.stringify(updatedToDo)
             })
@@ -228,7 +239,7 @@
 
         // 退出登录
         function logout(){
-            window.localStorage.setItem('userId', null);
+            window.localStorage.setItem('token', null);
             window.location.href = '/login.html';
         }
 
