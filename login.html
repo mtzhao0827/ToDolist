@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <style>
+        body{
+            font-family: Arial, sans-serif;
+        }
+        .login-container{
+            width: 300px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+        }
+        .register-container{
+            display: none;
+            width: 300px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<script src="public/requests.js" defer></script>
+
+<body>
+    <div class="login-container">
+        <h1>Login</h1>
+        <input type="text" id="username" placeholder="Enter username" required />
+        <input type="password" id="password" placeholder="Enter password" required />
+        <button onclick="login()">Login</button>
+        <button onclick="showRegister()">Register</button>
+    </div>
+
+    <div class="register-container" id="register-container">
+        <h1>Register</h1>
+        <input type="text" id="newUsername" placeholder="Enter new username" required />
+        <input type="password" id="newPassword" placeholder="Enter your password" required/>
+        <button onclick="register()">Register</button>
+        <button onclick="showLogin()">Go back to login</button>
+    </div>
+
+    <script>
+        function showRegister(){
+            document.getElementById('register-container').style.display = 'block';
+            // document.getElementById('login-container').style.display = 'none';
+        }
+
+        function showLogin(){
+            // document.getElementById('register-container').style.display = 'none';
+            document.getElementById('login-container').style.display = 'block';
+        }
+
+        async function login(){
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // 写法 1
+            const body = await post('/v1/users/login', {username, password});
+            window.localStorage.setItem('token', body.token);
+            window.location.href = '/index.html';
+            // 写法 2
+            // post('/v1/users/login', {username, password}).then(body =>{
+            //     window.localStorage.setItem('token', body.token);
+            //     window.location.href = '/index.html';Ï
+            // })
+
+            // fetch('/v1/users/login',{
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json',
+            //     },
+            //     body: JSON.stringify({username: username, password: password})
+            // })
+            //     .then(response => {
+            //         if (!response.ok){
+            //             throw new Error("Login failed");
+            //         }
+            //         return response.json();
+            //     })
+            //     .then(data => {
+            //         // 登录成功，存储用户token
+            //         window.localStorage.setItem('token', data.token);
+            //         window.location.href = '/index.html';
+            //     })
+            //     .catch(error => {
+            //         console.error('Error login:', error);
+            //         alert('Error logging in: ' + error);
+            //     })
+        }
+
+        async function register(){
+            const newUsername = document.getElementById('newUsername').value;
+            const newPassword = document.getElementById('newPassword').value;
+
+            await post('/v1/users/register', {username: newUsername, password: newPassword});
+            alert('Registration successful. Please login.');
+            window.location.href = '/login.html';
+
+            // fetch('/v1/users/register', {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json'
+            //     },
+            //     body: JSON.stringify({username: newUsername, password: newPassword})
+            // })
+            //     .then(response => {
+            //         if (response.ok){
+            //             alert('Registration successful. Please login.');
+            //             window.location.href = '/login.html';
+            //             return response.json();
+            //         } else {
+            //             throw new Error("Registration failed");
+            //         }
+            //     })
+            //     .catch(error => {
+            //         console.error('Error registration:', error);
+            //         alert('Error registrating: ' + error);
+            //     })
+        }
+    </script>
+</body>
+
+</html>

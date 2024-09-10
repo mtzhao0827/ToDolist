@@ -22,7 +22,7 @@ import java.util.Optional;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/users/todos")
+@RequestMapping("/v1/users/todos")
 public class ToDoController {
 
     private ToDoRepository toDoRepository;
@@ -56,15 +56,12 @@ public class ToDoController {
     // 删除ToDo
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteToDo(@PathVariable Long id, @AuthenticationPrincipal User authenticatedUser) {
-        Optional<ToDo> optionaltodo = toDoRepository.findById(id);
-        if (!optionaltodo.isPresent()) {
-            throw new TodoNotFoundException(id);
-        }
-        Long userId = authenticatedUser.getId();
-        ToDo todo = optionaltodo.get();
-        if (!todo.getUser().getId().equals(userId)){
+        ToDo todo = toDoRepository.findById(id).orElseThrow(() -> new TodoNotFoundException(id));
+
+        if (!todo.getUser().getId().equals(authenticatedUser.getId())) {
             throw new UserForbiddenException();
         }
+
         toDoRepository.deleteById(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
     }
@@ -76,21 +73,19 @@ public class ToDoController {
             @RequestBody ToDo updatedToDo,
             @AuthenticationPrincipal User authenticatedUser
     ) {
-        Optional<ToDo> optionaltodo = toDoRepository.findById(id);
-        if (!optionaltodo.isPresent()) {
-            throw new TodoNotFoundException(id);
-        }
-        Long userId = authenticatedUser.getId();
-        ToDo todo = optionaltodo.get();
-        if (!todo.getUser().getId().equals(userId)){
+        ToDo todo = toDoRepository.findById(id).orElseThrow(() -> new TodoNotFoundException(id));
+        if (!todo.getUser().getId().equals(authenticatedUser.getId())){
             throw new UserForbiddenException();
         }
+
         if (updatedToDo.getContent() != null) {
-                todo.setContent(updatedToDo.getContent());
+            todo.setContent(updatedToDo.getContent());
         }
+
         if (updatedToDo.isCompleted() != null) {
-                todo.setCompleted(updatedToDo.isCompleted());
+            todo.setCompleted(updatedToDo.isCompleted());
         }
+
         return ResponseEntity.status(HttpStatus.OK).body(toDoRepository.save(todo));
     }
 }

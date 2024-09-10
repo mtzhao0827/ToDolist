@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.jdbc.core.metadata.CallParameterMetaData;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,9 +26,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.stereotype.Component;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import java.lang.reflect.Array;
 
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(
@@ -53,8 +58,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,"/index.html").permitAll()
                         .requestMatchers(HttpMethod.GET,"/login.html").permitAll()
                         .requestMatchers(HttpMethod.GET,"/").permitAll()
-                        .requestMatchers(HttpMethod.POST,"/users/register").permitAll()
-                        .requestMatchers(HttpMethod.POST,"/users/login").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/v1/users/register").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/v1/users/login").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
@@ -62,17 +67,6 @@ public class SecurityConfig {
                         UsernamePasswordAuthenticationFilter.class
                 )
                 .build();
-    }
-
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**").allowedOrigins("*")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE");
-            }
-        };
     }
 
     @Bean

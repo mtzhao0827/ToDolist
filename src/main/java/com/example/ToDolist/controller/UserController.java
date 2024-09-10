@@ -28,7 +28,7 @@ import java.util.Map;
 
 @AllArgsConstructor
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/v1/users")
 public class UserController {
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
