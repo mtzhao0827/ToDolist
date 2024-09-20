@@ -11,7 +11,12 @@ function getHeaders() {
 }
 
 async function errorHandler(res, showAlert) {
-    const body = await res.json()
+    const bodyText = await res.text()
+    let body = bodyText
+
+    if (bodyText && bodyText.trim().startsWith("{")) {
+        body = JSON.parse(bodyText)
+    }
 
     if (!res.ok) {
         showAlert && alert(`${res.statusText}: ${body.message}`)
@@ -35,9 +40,33 @@ async function get(url, param = null, showAlert = false) {
     return errorHandler(res, showAlert)
 }
 
-async function post(url, body = null,showAlert=false) {
+async function post(url, body = null, showAlert= false) {
     const opt = {
         method: 'POST',
+        headers: getHeaders(),
+    }
+
+    if (body) {
+        opt.body = JSON.stringify(body)
+    }
+
+    const res = await fetch(url,opt);
+
+    return errorHandler(res, showAlert)
+}
+
+async function del(url, body = null, showAlert = false){
+    const res = await fetch(url, {
+        method: 'DELETE',
+        headers: getHeaders(),
+    });
+
+    return errorHandler(res, showAlert)
+}
+
+async function patch(url, body = null, showAlert = false){
+    const opt = {
+        method: 'PATCH',
         headers: getHeaders(),
     }
 

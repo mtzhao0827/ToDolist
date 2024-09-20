@@ -55,8 +55,9 @@ public class SecurityConfig {
                 .sessionManagement(c ->
                         c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeRequests(c -> c
-                        .requestMatchers(HttpMethod.GET,"/index.html").permitAll()
-                        .requestMatchers(HttpMethod.GET,"/login.html").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/**.html").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/**.js").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/**.css").permitAll()
                         .requestMatchers(HttpMethod.GET,"/").permitAll()
                         .requestMatchers(HttpMethod.POST,"/v1/users/register").permitAll()
                         .requestMatchers(HttpMethod.POST,"/v1/users/login").permitAll()
