@@ -1,12 +1,15 @@
 package com.example.ToDolist.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity // 标注该类为实体类，并且将其映射到数据库表
 public class ToDo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // 指定主键的生成方式，GenerationType.IDENTITY为自增
     private Long id;
+
+    @NotBlank(message = "Content must not be blank!")
     private String content;
     private Boolean completed;
 

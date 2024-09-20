@@ -1,6 +1,10 @@
 package com.example.ToDolist.model;
 
+import com.example.ToDolist.exception.user.UserNotFoundException;
+import com.example.ToDolist.repository.UserRepository;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import org.apache.logging.log4j.message.Message;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -10,14 +14,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+
 @Entity
 public class User implements UserDetails {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Username must not be blank!")
     private String username;
 
+    @NotBlank(message = "Password must not be blank!")
     private String password;
 
     public Long getId(){
