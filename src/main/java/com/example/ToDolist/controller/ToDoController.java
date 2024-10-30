@@ -1,32 +1,23 @@
 package com.example.ToDolist.controller;
 
-import com.example.ToDolist.exception.todo.TodoNotFoundException;
-import com.example.ToDolist.exception.user.UserForbiddenException;
-import com.example.ToDolist.exception.user.UserNotFoundException;
 import com.example.ToDolist.model.ToDo;
 import com.example.ToDolist.model.User;
-import com.example.ToDolist.repository.ToDoRepository;
-import com.example.ToDolist.repository.UserRepository;
+import com.example.ToDolist.service.todo.ToDoService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
 
 @RestController
 @AllArgsConstructor
 @RequestMapping("/v1/users/todos")
 public class ToDoController {
 
-    private ToDoRepository toDoRepository;
-    private UserRepository userRepository;
+    private final ToDoService todoService;
 
     // 分页
     @GetMapping("")
@@ -35,35 +26,19 @@ public class ToDoController {
             @RequestParam(defaultValue = "3") int size,
             @AuthenticationPrincipal User authenticatedUser
         ){
-        Long userId = authenticatedUser.getId();
-        Optional<User> userOptional = userRepository.findById(userId);
-        User user = userOptional.orElseThrow(()->new UserNotFoundException(userId));
-
-        Pageable pageable = PageRequest.of(page, size);
-        Page<ToDo> todos = toDoRepository.findByUser(user,pageable);
-        return ResponseEntity.status(HttpStatus.OK).body(todos);
+        return ResponseEntity.status(HttpStatus.OK).body(todoService.getTodos(PageRequest.of(page, size),authenticatedUser));
     }
 
     // 创建ToDo
     @PostMapping("")
     public ResponseEntity<ToDo> createToDo(@RequestBody ToDo newtodo, @AuthenticationPrincipal User authenticatedUser) {
-        Long userId = authenticatedUser.getId();
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
-        newtodo.setUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(toDoRepository.save(newtodo));
+        return ResponseEntity.status(HttpStatus.CREATED).body(todoService.createToDo(newtodo, authenticatedUser));
     }
 
     // 删除ToDo
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteToDo(@PathVariable Long id, @AuthenticationPrincipal User authenticatedUser) {
-        ToDo todo = toDoRepository.findById(id).orElseThrow(() -> new TodoNotFoundException(id));
-
-        if (!todo.getUser().getId().equals(authenticatedUser.getId())) {
-            throw new UserForbiddenException();
-        }
-
-        toDoRepository.deleteById(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(todoService.deleteToDo(id, authenticatedUser));
     }
 
     // 修改todo
@@ -73,19 +48,6 @@ public class ToDoController {
             @RequestBody ToDo updatedToDo,
             @AuthenticationPrincipal User authenticatedUser
     ) {
-        ToDo todo = toDoRepository.findById(id).orElseThrow(() -> new TodoNotFoundException(id));
-        if (!todo.getUser().getId().equals(authenticatedUser.getId())){
-            throw new UserForbiddenException();
-        }
-
-        if (updatedToDo.getContent() != null) {
-            todo.setContent(updatedToDo.getContent());
-        }
-
-        if (updatedToDo.isCompleted() != null) {
-            todo.setCompleted(updatedToDo.isCompleted());
-        }
-
-        return ResponseEntity.status(HttpStatus.OK).body(toDoRepository.save(todo));
+        return ResponseEntity.status(HttpStatus.OK).body(todoService.updateToDo(id, updatedToDo, authenticatedUser));
     }
 }

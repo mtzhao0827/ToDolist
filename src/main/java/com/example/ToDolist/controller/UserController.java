@@ -8,6 +8,7 @@ import com.example.ToDolist.exception.user.UserUnauthorizedException;
 import com.example.ToDolist.model.User;
 import com.example.ToDolist.repository.UserRepository;
 import com.example.ToDolist.security.JwtTokenProvider;
+import com.example.ToDolist.service.user.UserService;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,42 +35,17 @@ public class UserController {
     private PasswordEncoder passwordEncoder;
     private AuthenticationManager authenticationManager;
     private JwtTokenProvider jwtTokenProvider;
+    private final UserService userService;
 
     // 注册新用户
     @PostMapping("/register")
     public ResponseEntity<User> registerUser(@RequestBody User newUser) {
-        // 验证用户名是否存在
-        User existingUser = userRepository.findByUsername(newUser.getUsername());
-        if (existingUser != null){
-            String username = newUser.getUsername();
-            throw new UserConflictException(username);
-        }
-
-        // 密码加密
-        newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
-        return ResponseEntity.status(HttpStatus.CREATED).body(userRepository.save(newUser));
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.registerUser(newUser));
     }
 
     // 用户登录
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody AuthRequest authRequest)  {
-        try {
-            String username = authRequest.getUsername();
-
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(username, authRequest.getPassword())
-            );
-            // authenticationManager 负责认证用户，如果认证成功，将返回一个 authentication 对象，该对象包含已认证的用户信息
-
-            String token = jwtTokenProvider.createToken(authentication);
-            Map<Object, Object> model = new HashMap<>();
-
-            model.put("username", username);
-            model.put("token", token);
-
-            return ResponseEntity.status(201).body(model);
-        } catch (AuthenticationException e) {
-            throw new UnauthorizedException("用户名或密码错误");
-        }
+        return ResponseEntity.status(201).body(userService.loginUser(authRequest));
     }
 }
