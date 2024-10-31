@@ -21,30 +21,24 @@ public class ToDoServiceImpl implements ToDoService{
     private final ToDoRepository toDoRepository;
     private final UserRepository userRepository;
     @Override
-    public Page<ToDo> getTodos(Pageable pageable,User authenticatedUser) {
-        Long userId = authenticatedUser.getId();
-        Optional<User> userOptional = userRepository.findById(userId);
-        User user = userOptional.orElseThrow(()->new UserNotFoundException(userId));
+    public Page<ToDo> getTodos(Pageable pageable, User user) {
         Page<ToDo> todos = toDoRepository.findByUser(user,pageable);
         return todos;
     }
 
     @Override
-    public ToDo createToDo(ToDo newtodo, User authenticatedUser) {
-        Long userId = authenticatedUser.getId();
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+    public ToDo createToDo(ToDo newtodo, User user) {
         newtodo.setUser(user);
         return toDoRepository.save(newtodo);
     }
 
     @Override
-    public Void deleteToDo(Long id, User authenticatedUser) {
+    public void deleteToDo(Long id, User authenticatedUser) {
         ToDo todo = toDoRepository.findById(id).orElseThrow(() -> new TodoNotFoundException(id));
         if (!todo.getUser().getId().equals(authenticatedUser.getId())) {
             throw new UserForbiddenException();
         }
         toDoRepository.deleteById(id);
-        return null;
     }
 
     @Override
@@ -62,5 +56,4 @@ public class ToDoServiceImpl implements ToDoService{
         }
         return toDoRepository.save(todo);
     }
-
 }

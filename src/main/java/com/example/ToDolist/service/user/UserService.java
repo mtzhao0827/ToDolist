@@ -6,6 +6,6 @@ import com.example.ToDolist.model.User;
 import java.util.Map;
 
 public interface UserService {
-    User registerUser( User newUser);
+    User registerUser(User newUser);
     Map<Object, Object> loginUser(AuthRequest authRequest);
 }

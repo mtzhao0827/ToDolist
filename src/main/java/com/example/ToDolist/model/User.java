@@ -23,7 +23,9 @@ public class User implements UserDetails {
     private Long id;
 
     @NotBlank(message = "Username must not be blank!")
+    @Column(unique=true)
     private String username;
+
 
     @NotBlank(message = "Password must not be blank!")
     private String password;
