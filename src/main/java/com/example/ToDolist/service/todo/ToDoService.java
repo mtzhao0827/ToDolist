@@ -10,4 +10,5 @@ public interface ToDoService {
     ToDo createToDo(ToDo newtodo, User user);
     void deleteToDo(Long id, User authenticatedUser);
     ToDo updateToDo(Long id, ToDo updatedToDo, User authenticatedUser);
+    ToDo updateFile(Long id, String filePath, User authenticatedUser);
 }

@@ -56,4 +56,18 @@ public class ToDoServiceImpl implements ToDoService{
         }
         return toDoRepository.save(todo);
     }
+
+    @Override
+    public ToDo updateFile(Long id, String filePath, User authenticatedUser) {
+        ToDo todo = toDoRepository.findById(id).orElseThrow(() -> new TodoNotFoundException(id));
+        if (!todo.getUser().getId().equals(authenticatedUser.getId())){
+            throw new UserForbiddenException();
+        }
+        if (filePath != null) {
+            todo.setFilePath(filePath);
+        }
+        return toDoRepository.save(todo);
+    }
+
+
 }

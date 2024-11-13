@@ -78,3 +78,41 @@ async function patch(url, body = null, showAlert = false){
 
     return errorHandler(res, showAlert)
 }
+
+async function upload(url, element = null, showAlert = false){
+    const token = window.localStorage.getItem('token');
+
+    const headers = {
+        'Authorization': `Bearer ${token}`,
+    }
+
+    const formData = new FormData();
+
+    for (const file of element.files) {
+        formData.append("file", file);
+    }
+
+    const opt = {
+        method: 'POST',
+        headers: headers,
+        body: formData,
+    }
+
+    const res = await fetch(url,opt);
+
+    return errorHandler(res, showAlert)
+
+}
+
+async function getUrl(url, element = null, showAlert = false) {
+    const opt = {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: element,
+    }
+
+    const res = await fetch(url,opt);
+
+    return errorHandler(res, showAlert)
+
+}

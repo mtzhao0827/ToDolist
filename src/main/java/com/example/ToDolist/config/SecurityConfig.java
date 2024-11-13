@@ -61,6 +61,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,"/").permitAll()
                         .requestMatchers(HttpMethod.POST,"/v1/users/register").permitAll()
                         .requestMatchers(HttpMethod.POST,"/v1/users/login").permitAll()
+                        .requestMatchers(HttpMethod.GET,"v1/files/{id}").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
