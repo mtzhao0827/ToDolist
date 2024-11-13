@@ -19,162 +19,192 @@
 <script src="/requests.js" defer></script>
 
 <body>
-    <h1>Todo List</h1>
-    <div>
-        <input type="text" id="new-todo-content" placeholder="Enter new todo" />
-        <button onclick="createToDo()">Add ToDo</button>
-    </div>
-    <div>
-        <input type="number" id="delete-todo-id" placeholder="Enter the id of the todo you want to delete" />
-        <button onclick="deleteToDo()">Delete ToDo</button>
-    </div>
-    <div>
-        <input type="number" id="update-todo-id" placeholder="Enter the id of the todo you want to update" />
-        <input type="text" id="update-todo-content" placeholder="Enter the new content of the todo" />
-        <button onclick="updateToDo()">Update ToDo</button>
-    </div>
-    <div>
-        <button onclick="logout()">Logout</button>
-    </div>
-    <div id="pagination"></div>
-    <div id="todo-list"></div>
+<h1>Todo List</h1>
+<div>
+    <input type="text" id="new-todo-content" placeholder="Enter new todo" />
+    <button onclick="createToDo()">Add ToDo</button>
+</div>
+<div>
+    <input type="number" id="delete-todo-id" placeholder="Enter the id of the todo you want to delete" />
+    <button onclick="deleteToDo()">Delete ToDo</button>
+</div>
+<div>
+    <input type="number" id="update-todo-id" placeholder="Enter the id of the todo you want to update" />
+    <input type="text" id="update-todo-content" placeholder="Enter the new content of the todo" />
+    <button onclick="updateToDo()">Update ToDo</button>
+</div>
+<form id="form" enctype="multipart/form-data">
+    <input type="number" id="upload-todo-id" placeholder="Enter the id of the todo you want to upload" />
+    <input type="file" id="fileInput" /><br />
+    <button onclick="event.preventDefault();          uploadFile()" type="submit">Upload</button>
+</form>
+<div>
+    <button onclick="logout()">Logout</button>
+</div>
+<div id="pagination"></div>
+<div id="todo-list"></div>
+<div id="image-list"></div>
 
-    <script>
-        // 检测localStorage中是否有userId，如果没有，则跳转到login.html
-        let userToken = localStorage.getItem('token');
-        if (!userToken) {
-            window.location.href = '/login.html';
+<script>
+    // 检测localStorage中是否有userId，如果没有，则跳转到login.html
+    let userToken = localStorage.getItem('token');
+    if (!userToken) {
+        window.location.href = '/login.html';
+    }
+
+    // 获取 TODO 列表并显示在页面上
+    document.addEventListener('DOMContentLoaded', ()=> {
+        fetchTodos(0,3);
+    })
+
+    async function fetchTodos(page, size) {
+        const data = await get(`/v1/users/todos`,{page, size});
+        const todos = data.content //提取分页数据中的内容
+        const totalPages = data.totalPages;
+        const currentPage = data.number + 1;
+        displayTodos(todos); //显示当前页的todos
+        displayPagination(totalPages, currentPage); //显示分页
+    }
+
+    function displayTodos(todos){
+        const todoList = document.getElementById('todo-list');
+        todoList.innerHTML = ''; // 清空现有内容
+
+        for (let i = 0; i < todos.length; i++) {
+            const todo = todos[i];
+            const todoItem = document.createElement('div');
+            todoItem.className = 'todo-item';
+            todoItem.innerText = `ID: ${todo.id} - ${todo.content} - Completed: ${todo.completed}`;
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            //checkbox.disabled = true;
+            checkbox.checked = todo.completed;
+            checkbox.addEventListener('change', function () {
+                updateCheck(todo.id, todo.content, checkbox.checked);
+            });
+            todoItem.appendChild(checkbox);
+            todoList.appendChild(todoItem);
         }
 
-        // 获取 TODO 列表并显示在页面上
-        document.addEventListener('DOMContentLoaded', ()=> {
-            fetchTodos(0,3);
-        })
-
-        async function fetchTodos(page, size) {
-            const data = await get(`/v1/users/todos`,{page, size});
-            const todos = data.content //提取分页数据中的内容
-            const totalPages = data.totalPages;
-            const currentPage = data.number + 1;
-            displayTodos(todos); //显示当前页的todos
-            displayPagination(totalPages, currentPage); //显示分页
-        }
-
-        function displayTodos(todos){
-            const todoList = document.getElementById('todo-list');
-            todoList.innerHTML = ''; // 清空现有内容
-
-            for (let i = 0; i < todos.length; i++) {
-                const todo = todos[i];
-                const todoItem = document.createElement('div');
-                todoItem.className = 'todo-item';
-                todoItem.innerText = `ID: ${todo.id} - ${todo.content} - Completed: ${todo.completed}`;
-
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                //checkbox.disabled = true;
-                checkbox.checked = todo.completed;
-                checkbox.addEventListener('change', function () {
-                    updateCheck(todo.id, todo.content, checkbox.checked);
-                });
-                todoItem.appendChild(checkbox);
-                todoList.appendChild(todoItem);
+        const imageList = document.getElementById('image-list');
+        for (let i = 0; i < todos.length; i++) {
+            const todo = todos[i];
+            const filePath = todo.filePath;
+            if (filePath) {
+                imageList.innerHTML += `<img src="${filePath}">`;
             }
+
         }
+    }
 
-        function displayPagination(totalPages, currentPage){
-            const pagination = document.getElementById('pagination');
-            pagination.innerHTML = '';
+    function displayPagination(totalPages, currentPage){
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = '';
 
-            for (let page = 0; page < totalPages; page++){
-                const pageLink = document.createElement('a');
-                pageLink.href = '#';
-                pageLink.innerText = page + 1;
-                if (page === currentPage -1) { //当前页高亮
-                    pageLink.classList.add('active');
-                }
-                pageLink.addEventListener('click', function (event){
-                    event.preventDefault(); //阻止默认行为
-                    fetchTodos(page,3); //跳转到指定页
-                });
-                pagination.appendChild(pageLink);
+        for (let page = 0; page < totalPages; page++){
+            const pageLink = document.createElement('a');
+            pageLink.href = '#';
+            pageLink.innerText = page + 1;
+            if (page === currentPage -1) { //当前页高亮
+                pageLink.classList.add('active');
             }
+            pageLink.addEventListener('click', function (event){
+                event.preventDefault(); //阻止默认行为
+                fetchTodos(page,3); //跳转到指定页
+            });
+            pagination.appendChild(pageLink);
         }
+    }
 
-        // 在页面加载时获取 TODO 列表
-        window.onload = () => {
-            fetchTodos(0,3);
+    // 在页面加载时获取 TODO 列表
+    window.onload = () => {
+        fetchTodos(0,3);
+    };
+
+
+    // 添加新的 TODO
+    async function createToDo() {
+        const content = document.getElementById('new-todo-content').value;
+        if (content.trim() === '') {
+            alert('ToDo content cannot be empty');
+            return;
+        }
+        const newToDo = {
+            content: content,
+            completed: false
         };
 
+        await post(`/v1/users/todos`, newToDo);
+        document.getElementById('new-todo-content').value = '';
+        fetchTodos(0,3);
+    }
 
-        // 添加新的 TODO
-        async function createToDo() {
-            const content = document.getElementById('new-todo-content').value;
-            if (content.trim() === '') {
-                alert('ToDo content cannot be empty');
-                return;
-            }
-            const newToDo = {
-                content: content,
-                completed: false
-            };
-
-            await post(`/v1/users/todos`, newToDo);
-            document.getElementById('new-todo-content').value = '';
-            fetchTodos(0,3);
-         }
-
-        // 删除ToDo
-       async function deleteToDo() {
-            const id = document.getElementById('delete-todo-id').value;
-            if (id.trim() === '') {
-                alert('ToDo id cannot be empty');
-                return;
-            }
-            await del(`/v1/users/todos/${id}`);
-            document.getElementById('delete-todo-id').value = '';
-            fetchTodos(0,3);
+    // 删除ToDo
+    async function deleteToDo() {
+        const id = document.getElementById('delete-todo-id').value;
+        if (id.trim() === '') {
+            alert('ToDo id cannot be empty');
+            return;
         }
+        await del(`/v1/users/todos/${id}`);
+        document.getElementById('delete-todo-id').value = '';
+        fetchTodos(0,3);
+    }
 
-        //更新check
-        async function updateCheck(id,content,completed){
-            const updatedToDo = {
-                content: content,
-                completed: completed
-            };
-            await patch(`/v1/users/todos/${id}`, updatedToDo);
-            fetchTodos(0,3);
+    //更新check
+    async function updateCheck(id,content,completed){
+        const updatedToDo = {
+            content: content,
+            completed: completed
+        };
+        await patch(`/v1/users/todos/${id}`, updatedToDo);
+        fetchTodos(0,3);
+    }
+
+    // 更新ToDo
+    async function updateToDo() {
+        const id = document.getElementById('update-todo-id').value;
+        const content = document.getElementById('update-todo-content').value;
+        if (id.trim() === '') {
+            alert('ToDo id cannot be empty.');
+            return;
         }
-
-        // 更新ToDo
-        async function updateToDo() {
-            const id = document.getElementById('update-todo-id').value;
-            const content = document.getElementById('update-todo-content').value;
-            if (id.trim() === '') {
-                alert('ToDo id cannot be empty.');
-                return;
-            }
-            if (content.trim() === '') {
-                alert('ToDo content cannot be empty.');
-                return;
-            }
-            const updatedToDo = {
-                content: content,
-                completed: false
-            };
-            await patch(`/v1/users/todos/${id}`, updatedToDo);
-            document.getElementById('update-todo-id').value = '';
-            document.getElementById('update-todo-content').value = '';
-            fetchTodos(0,3);
+        if (content.trim() === '') {
+            alert('ToDo content cannot be empty.');
+            return;
         }
+        const updatedToDo = {
+            content: content,
+            completed: false
+        };
+        await patch(`/v1/users/todos/${id}`, updatedToDo);
+        document.getElementById('update-todo-id').value = '';
+        document.getElementById('update-todo-content').value = '';
+        fetchTodos(0,3);
+    }
 
-        // 退出登录
-        function logout(){
-            window.localStorage.setItem('token', null);
-            window.location.href = '/login.html';
+    // 上传图片
+    async function uploadFile() {
+        const id = document.getElementById('upload-todo-id').value;
+        const inputFile = document.getElementById('fileInput');
+        if (id.trim() === '') {
+            alert('ToDo id cannot be empty.');
+            return;
         }
+        const filePath = await upload(`/v1/files`, inputFile);
+        await getUrl(`/v1/users/todos/${id}/files`, filePath);
+        document.getElementById('upload-todo-id').value = '';
+        fetchTodos(0,3);
+    }
 
-    </script>
+    // 退出登录
+    function logout(){
+        window.localStorage.setItem('token', null);
+        window.location.href = '/login.html';
+    }
+
+</script>
 </body>
 
 </html>

@@ -52,7 +52,7 @@ public class ToDoController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
     }
 
-    // 修改todo
+    // 修改ToDo
     @PatchMapping("/{id}")
     public ResponseEntity<ToDo> updateToDo(
             @PathVariable Long id,
@@ -61,4 +61,12 @@ public class ToDoController {
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(todoService.updateToDo(id, updatedToDo, authenticatedUser));
     }
+
+    // 保存图片
+    @PatchMapping("/{id}/files")
+    public ResponseEntity<ToDo> updateFile(@PathVariable Long id, @RequestBody String filePath, @AuthenticationPrincipal User authenticatedUser) {
+        return ResponseEntity.status(HttpStatus.OK).body(todoService.updateFile(id, filePath, authenticatedUser));
+    }
+
+
 }

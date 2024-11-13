@@ -13,16 +13,19 @@ public class ToDo {
     private String content;
     private Boolean completed;
 
+    private String filePath;
+
     @ManyToOne
     @JoinColumn(name = "userId", referencedColumnName = "id")
     private User user;
 
     public ToDo() {}
 
-    public ToDo(String content, Boolean completed, User user) {
+    public ToDo(String content, Boolean completed, String filePath, User user) {
         this.content = content;
         this.completed = completed;
         this.user = user;
+        this.filePath = filePath;
     }
 
     public Long getId() {
@@ -48,6 +51,10 @@ public class ToDo {
     public void setCompleted(Boolean completed) {
         this.completed = completed;
     }
+
+    public String getFilePath() { return filePath; }
+
+    public void setFilePath(String filePath) { this.filePath = filePath; }
 
     public User getUser(){
         return user;
